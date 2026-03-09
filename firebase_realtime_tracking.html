@@ -289,215 +289,358 @@
             color: #2196F3;
             text-decoration: none;
         }
+
+        /* GPS刷新率设置 */
+        .gps-settings {
+            margin: 16px 0;
+            padding: 16px;
+            background: #f5f7fa;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .gps-settings h4 {
+            font-size: 13px;
+            font-weight: 500;
+            color: #424242;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .refresh-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .refresh-option {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .refresh-option:hover {
+            border-color: #2196F3;
+            background: #f5f9ff;
+        }
+
+        .refresh-option.selected {
+            border-color: #2196F3;
+            background: #e3f2fd;
+        }
+
+        .refresh-option input[type="radio"] {
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
+        .refresh-option label {
+            flex: 1;
+            cursor: pointer;
+            font-size: 14px;
+            color: #424242;
+        }
+
+        .refresh-option .desc {
+            font-size: 12px;
+            color: #757575;
+            margin-top: 4px;
+        }
+
+        .refresh-option .badge {
+            padding: 4px 8px;
+            background: #2196F3;
+            color: white;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🚗 Real-time Delivery Tracker</h1>
-            <p>Live GPS tracking & unlock system</p>
-        </div>
+<div class="container">
+    <div class="header">
+        <h1>🚗 Real-time Delivery Tracker</h1>
+        <p>Live GPS tracking & unlock system</p>
+    </div>
 
-        <!-- 角色选择界面 -->
-        <div id="roleSelection" class="role-selection">
-            <h2>Choose Your Role</h2>
-            
-            <div class="role-buttons">
-                <div class="role-button" onclick="selectRole('car')">
-                    <div class="icon">🚗</div>
-                    <div class="title">Delivery Car</div>
-                    <div class="desc">Share your location & receive unlock requests</div>
-                </div>
-                
-                <div class="role-button" onclick="selectRole('customer')">
-                    <div class="icon">👤</div>
-                    <div class="title">Customer</div>
-                    <div class="desc">Track car & unlock when nearby</div>
-                </div>
+    <!-- 角色选择界面 -->
+    <div id="roleSelection" class="role-selection">
+        <h2>Choose Your Role</h2>
+
+        <div class="role-buttons">
+            <div class="role-button" onclick="selectRole('car')">
+                <div class="icon">🚗</div>
+                <div class="title">Delivery Car</div>
+                <div class="desc">Share your location & receive unlock requests</div>
             </div>
 
-            <div class="session-input">
-                <label>Session ID (same ID for both devices):</label>
-                <input type="text" id="sessionId" placeholder="Enter session ID, e.g., demo123" value="demo123">
+            <div class="role-button" onclick="selectRole('customer')">
+                <div class="icon">👤</div>
+                <div class="title">Customer</div>
+                <div class="desc">Track car & unlock when nearby</div>
             </div>
         </div>
 
-        <!-- 主界面 -->
-        <div id="mainInterface" class="hidden">
-            <div id="map"></div>
+        <div class="session-input">
+            <label>Session ID (same ID for both devices):</label>
+            <input type="text" id="sessionId" placeholder="Enter session ID, e.g., demo123" value="demo123">
+        </div>
 
-            <div class="info-section">
-                <div id="statusMessage" class="status-card info">
-                    Initializing...
+        <div class="gps-settings">
+            <h4>GPS Update Rate</h4>
+            <div class="refresh-options">
+                <div class="refresh-option" onclick="selectRefreshRate('auto', this)">
+                    <input type="radio" name="refreshRate" id="rate-auto" value="auto">
+                    <label for="rate-auto">
+                        <div>Auto (Smart)</div>
+                        <div class="desc">1-10 sec based on movement • Battery saving</div>
+                    </label>
                 </div>
 
-                <div id="distanceDisplay" class="distance-display hidden">
-                    <div class="label">Distance</div>
-                    <div>
-                        <span class="value" id="distanceValue">--</span>
-                        <span class="unit">m</span>
-                    </div>
+                <div class="refresh-option selected" onclick="selectRefreshRate('1000', this)">
+                    <input type="radio" name="refreshRate" id="rate-1s" value="1000" checked>
+                    <label for="rate-1s">
+                        <div>Every 1 second</div>
+                        <div class="desc">Real-time tracking • Higher battery usage</div>
+                    </label>
+                    <span class="badge">RECOMMENDED</span>
                 </div>
 
-                <button id="unlockButton" class="unlock-button hidden" onclick="requestUnlock()">
-                    Unlock Door
-                </button>
-
-                <div class="details">
-                    <div>
-                        <span>Role:</span>
-                        <strong id="roleDisplay">--</strong>
-                    </div>
-                    <div>
-                        <span>Session ID:</span>
-                        <strong id="sessionDisplay">--</strong>
-                    </div>
-                    <div>
-                        <span>Your Location:</span>
-                        <strong id="myLocationDisplay">Loading...</strong>
-                    </div>
-                    <div id="otherLocationRow" class="hidden">
-                        <span id="otherLabel">Other Location:</span>
-                        <strong id="otherLocationDisplay">Waiting...</strong>
-                    </div>
+                <div class="refresh-option" onclick="selectRefreshRate('2000', this)">
+                    <input type="radio" name="refreshRate" id="rate-2s" value="2000">
+                    <label for="rate-2s">
+                        <div>Every 2 seconds</div>
+                        <div class="desc">Balanced • Good for most cases</div>
+                    </label>
                 </div>
-            </div>
 
-            <div class="footer">
-                Session: <span id="sessionFooter">--</span> | 
-                <a href="#" onclick="resetSession()">Change Role</a>
+                <div class="refresh-option" onclick="selectRefreshRate('5000', this)">
+                    <input type="radio" name="refreshRate" id="rate-5s" value="5000">
+                    <label for="rate-5s">
+                        <div>Every 5 seconds</div>
+                        <div class="desc">Battery efficient • Slower updates</div>
+                    </label>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- 解锁动画 -->
-    <div id="unlockAnimation" class="unlock-animation hidden">
-        <div class="icon">🔓</div>
-        <div class="message">Door Unlocked!</div>
+    <!-- 主界面 -->
+    <div id="mainInterface" class="hidden">
+        <div id="map"></div>
+
+        <div class="info-section">
+            <div id="statusMessage" class="status-card info">
+                Initializing...
+            </div>
+
+            <div id="distanceDisplay" class="distance-display hidden">
+                <div class="label">Distance</div>
+                <div>
+                    <span class="value" id="distanceValue">--</span>
+                    <span class="unit">m</span>
+                </div>
+            </div>
+
+            <button id="unlockButton" class="unlock-button hidden" onclick="requestUnlock()">
+                Unlock Door
+            </button>
+
+            <div class="details">
+                <div>
+                    <span>Role:</span>
+                    <strong id="roleDisplay">--</strong>
+                </div>
+                <div>
+                    <span>Session ID:</span>
+                    <strong id="sessionDisplay">--</strong>
+                </div>
+                <div>
+                    <span>Your Location:</span>
+                    <strong id="myLocationDisplay">Loading...</strong>
+                </div>
+                <div id="otherLocationRow" class="hidden">
+                    <span id="otherLabel">Other Location:</span>
+                    <strong id="otherLocationDisplay">Waiting...</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Session: <span id="sessionFooter">--</span> |
+            <a href="#" onclick="resetSession()">Change Role</a>
+        </div>
     </div>
+</div>
 
-    <script type="module">
-        // ========== Firebase配置 ==========
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+<!-- 解锁动画 -->
+<div id="unlockAnimation" class="unlock-animation hidden">
+    <div class="icon">🔓</div>
+    <div class="message">Door Unlocked!</div>
+</div>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDnQ4T9V_mEcUHg2i6-RPpeE6LiV9TO8Ao",
-            authDomain: "delivery-tracker-67ade.firebaseapp.com",
-            databaseURL: "https://delivery-tracker-67ade-default-rtdb.firebaseio.com",
-            projectId: "delivery-tracker-67ade",
-            storageBucket: "delivery-tracker-67ade.firebasestorage.app",
-            messagingSenderId: "227328264386",
-            appId: "1:227328264386:web:dc89b743cf1136a5b8d35b"
-        };
+<script type="module">
+    // ========== Firebase配置 ==========
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
+    const firebaseConfig = {
+        apiKey: "AIzaSyDnQ4T9V_mEcUHg2i6-RPpeE6LiV9TO8Ao",
+        authDomain: "delivery-tracker-67ade.firebaseapp.com",
+        databaseURL: "https://delivery-tracker-67ade-default-rtdb.firebaseio.com",
+        projectId: "delivery-tracker-67ade",
+        storageBucket: "delivery-tracker-67ade.firebasestorage.app",
+        messagingSenderId: "227328264386",
+        appId: "1:227328264386:web:dc89b743cf1136a5b8d35b"
+    };
 
-        // ========== 配置 ==========
-        const CONFIG = {
-            GOOGLE_MAPS_API_KEY: 'AIzaSyBZs7TmEfW1xglEsTmSSjvJ2Yn4ctoFHJs',
-            MAX_DISTANCE_METERS: 5,
-        };
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
 
-        // ========== 全局变量 ==========
-        let myRole = null;
-        let sessionId = null;
-        let myLocation = null;
-        let otherLocation = null;
-        let map = null;
-        let myMarker = null;
-        let otherMarker = null;
-        let safetyCircle = null;
-        let watchId = null;
+    // ========== 配置 ==========
+    const CONFIG = {
+        GOOGLE_MAPS_API_KEY: 'AIzaSyBZs7TmEfW1xglEsTmSSjvJ2Yn4ctoFHJs',
+        MAX_DISTANCE_METERS: 5,
+    };
 
-        // ========== 角色选择 ==========
-        window.selectRole = function(role) {
-            myRole = role;
-            sessionId = document.getElementById('sessionId').value.trim();
-            
-            if (!sessionId) {
-                alert('Please enter a session ID');
-                return;
+    // ========== 全局变量 ==========
+    let myRole = null;
+    let sessionId = null;
+    let myLocation = null;
+    let otherLocation = null;
+    let map = null;
+    let myMarker = null;
+    let otherMarker = null;
+    let safetyCircle = null;
+    let watchId = null;
+    let gpsUpdateMode = 'interval'; // 'auto' 或 'interval'
+    let gpsUpdateInterval = 1000; // 默认1秒
+
+    // ========== 角色选择 ==========
+    window.selectRefreshRate = function(value, element) {
+        // 移除所有选中状态
+        document.querySelectorAll('.refresh-option').forEach(el => {
+            el.classList.remove('selected');
+        });
+
+        // 添加选中状态
+        element.classList.add('selected');
+
+        // 选中对应的radio
+        element.querySelector('input[type="radio"]').checked = true;
+
+        // 设置刷新模式
+        if (value === 'auto') {
+            gpsUpdateMode = 'auto';
+        } else {
+            gpsUpdateMode = 'interval';
+            gpsUpdateInterval = parseInt(value);
+        }
+
+        console.log(`GPS update set to: ${gpsUpdateMode === 'auto' ? 'Auto' : gpsUpdateInterval + 'ms'}`);
+    };
+
+    window.selectRole = function(role) {
+        myRole = role;
+        sessionId = document.getElementById('sessionId').value.trim();
+
+        if (!sessionId) {
+            alert('Please enter a session ID');
+            return;
+        }
+
+        document.getElementById('roleSelection').classList.add('hidden');
+        document.getElementById('mainInterface').classList.remove('hidden');
+
+        document.getElementById('roleDisplay').textContent =
+            role === 'car' ? '🚗 Delivery Car' : '👤 Customer';
+        document.getElementById('sessionDisplay').textContent = sessionId;
+        document.getElementById('sessionFooter').textContent = sessionId;
+
+        if (role === 'customer') {
+            document.getElementById('otherLabel').textContent = 'Car Location:';
+            document.getElementById('unlockButton').classList.remove('hidden');
+        } else {
+            document.getElementById('otherLabel').textContent = 'Customer Location:';
+        }
+
+        document.getElementById('otherLocationRow').classList.remove('hidden');
+
+        startTracking();
+    };
+
+    window.resetSession = function() {
+        if (confirm('Reset session and choose new role?')) {
+            stopTracking();
+
+            // 清除Firebase数据
+            if (sessionId && myRole) {
+                const myRef = ref(database, `sessions/${sessionId}/${myRole}`);
+                remove(myRef);
             }
 
-            document.getElementById('roleSelection').classList.add('hidden');
-            document.getElementById('mainInterface').classList.remove('hidden');
-            
-            document.getElementById('roleDisplay').textContent = 
-                role === 'car' ? '🚗 Delivery Car' : '👤 Customer';
-            document.getElementById('sessionDisplay').textContent = sessionId;
-            document.getElementById('sessionFooter').textContent = sessionId;
-            
-            if (role === 'customer') {
-                document.getElementById('otherLabel').textContent = 'Car Location:';
-                document.getElementById('unlockButton').classList.remove('hidden');
-            } else {
-                document.getElementById('otherLabel').textContent = 'Customer Location:';
-            }
-            
-            document.getElementById('otherLocationRow').classList.remove('hidden');
-            
-            startTracking();
-        };
+            document.getElementById('mainInterface').classList.add('hidden');
+            document.getElementById('roleSelection').classList.remove('hidden');
 
-        window.resetSession = function() {
-            if (confirm('Reset session and choose new role?')) {
-                stopTracking();
-                
-                // 清除Firebase数据
-                if (sessionId && myRole) {
-                    const myRef = ref(database, `sessions/${sessionId}/${myRole}`);
-                    remove(myRef);
-                }
-                
-                document.getElementById('mainInterface').classList.add('hidden');
-                document.getElementById('roleSelection').classList.remove('hidden');
-                
-                myRole = null;
-                sessionId = null;
-                myLocation = null;
-                otherLocation = null;
-                map = null;
-                myMarker = null;
-                otherMarker = null;
-                safetyCircle = null;
-            }
-            return false;
-        };
+            myRole = null;
+            sessionId = null;
+            myLocation = null;
+            otherLocation = null;
+            map = null;
+            myMarker = null;
+            otherMarker = null;
+            safetyCircle = null;
+        }
+        return false;
+    };
 
-        // ========== 开始追踪 ==========
-        function startTracking() {
-            showStatus('info', 'Getting your location...');
+    // ========== 开始追踪 ==========
+    function startTracking() {
+        showStatus('info', 'Getting your location...');
 
-            if (!navigator.geolocation) {
-                showStatus('error', 'Browser does not support geolocation');
-                return;
+        if (!navigator.geolocation) {
+            showStatus('error', 'Browser does not support geolocation');
+            return;
+        }
+
+        if (gpsUpdateMode === 'interval') {
+            // 固定间隔模式：每N秒主动请求位置
+            function updateLocation() {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        handleLocationUpdate(position);
+                    },
+                    (error) => {
+                        showStatus('error', 'Failed to get location: ' + error.message);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        maximumAge: 0,
+                        timeout: 10000
+                    }
+                );
             }
 
-            // 持续监听位置变化
+            // 立即执行一次
+            updateLocation();
+
+            // 然后每隔N秒执行一次
+            watchId = setInterval(updateLocation, gpsUpdateInterval);
+
+            console.log(`GPS tracking started: ${gpsUpdateInterval}ms interval`);
+
+        } else {
+            // 自动模式：事件驱动，位置变化时自动触发
             watchId = navigator.geolocation.watchPosition(
                 (position) => {
-                    myLocation = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude,
-                        accuracy: position.coords.accuracy,
-                        timestamp: Date.now()
-                    };
-
-                    document.getElementById('myLocationDisplay').textContent = 
-                        `${myLocation.lat.toFixed(6)}, ${myLocation.lng.toFixed(6)}`;
-
-                    // 上传位置到Firebase
-                    const myRef = ref(database, `sessions/${sessionId}/${myRole}`);
-                    set(myRef, myLocation);
-
-                    // 初始化或更新地图
-                    if (!map) {
-                        initMap();
-                    } else {
-                        updateMyMarker();
-                    }
+                    handleLocationUpdate(position);
                 },
                 (error) => {
                     showStatus('error', 'Failed to get location: ' + error.message);
@@ -509,220 +652,251 @@
                 }
             );
 
-            // 监听对方位置
-            const otherRole = myRole === 'car' ? 'customer' : 'car';
-            const otherRef = ref(database, `sessions/${sessionId}/${otherRole}`);
-            onValue(otherRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    otherLocation = data;
-                    
-                    document.getElementById('otherLocationDisplay').textContent = 
-                        `${otherLocation.lat.toFixed(6)}, ${otherLocation.lng.toFixed(6)}`;
+            console.log('GPS tracking started: Auto mode');
+        }
 
-                    if (map) {
-                        updateOtherMarker();
-                        calculateAndDisplayDistance();
-                    }
-                } else {
-                    document.getElementById('otherLocationDisplay').textContent = 'Waiting...';
+        // 监听对方位置
+        const otherRole = myRole === 'car' ? 'customer' : 'car';
+        const otherRef = ref(database, `sessions/${sessionId}/${otherRole}`);
+        onValue(otherRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                otherLocation = data;
+
+                document.getElementById('otherLocationDisplay').textContent =
+                    `${otherLocation.lat.toFixed(6)}, ${otherLocation.lng.toFixed(6)}`;
+
+                if (map) {
+                    updateOtherMarker();
+                    calculateAndDisplayDistance();
+                }
+            } else {
+                document.getElementById('otherLocationDisplay').textContent = 'Waiting...';
+            }
+        });
+
+        // 监听解锁请求（仅小车端）
+        if (myRole === 'car') {
+            const unlockRef = ref(database, `sessions/${sessionId}/unlockRequest`);
+            onValue(unlockRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.timestamp > (Date.now() - 5000)) {
+                    showUnlockAnimation();
+                    // 清除解锁请求
+                    remove(unlockRef);
                 }
             });
-
-            // 监听解锁请求（仅小车端）
-            if (myRole === 'car') {
-                const unlockRef = ref(database, `sessions/${sessionId}/unlockRequest`);
-                onValue(unlockRef, (snapshot) => {
-                    const data = snapshot.val();
-                    if (data && data.timestamp > (Date.now() - 5000)) {
-                        showUnlockAnimation();
-                        // 清除解锁请求
-                        remove(unlockRef);
-                    }
-                });
-            }
         }
+    }
 
-        function stopTracking() {
-            if (watchId) {
+    function handleLocationUpdate(position) {
+        myLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+            timestamp: Date.now()
+        };
+
+        document.getElementById('myLocationDisplay').textContent =
+            `${myLocation.lat.toFixed(6)}, ${myLocation.lng.toFixed(6)}`;
+
+        // 上传位置到Firebase
+        const myRef = ref(database, `sessions/${sessionId}/${myRole}`);
+        set(myRef, myLocation);
+
+        // 初始化或更新地图
+        if (!map) {
+            initMap();
+        } else {
+            updateMyMarker();
+        }
+    }
+
+    function stopTracking() {
+        if (watchId) {
+            if (gpsUpdateMode === 'interval') {
+                clearInterval(watchId);
+            } else {
                 navigator.geolocation.clearWatch(watchId);
-                watchId = null;
             }
+            watchId = null;
+            console.log('GPS tracking stopped');
+        }
+    }
+
+    // ========== 地图相关 ==========
+    function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: myLocation,
+            zoom: 17,
+            mapTypeControl: false,
+            fullscreenControl: false,
+            streetViewControl: false,
+        });
+
+        // 我的标记
+        myMarker = new google.maps.Marker({
+            position: myLocation,
+            map: map,
+            title: myRole === 'car' ? 'Delivery Car (You)' : 'Customer (You)',
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 12,
+                fillColor: myRole === 'car' ? '#EA4335' : '#4285F4',
+                fillOpacity: 1,
+                strokeColor: '#ffffff',
+                strokeWeight: 3,
+            },
+        });
+
+        if (myRole === 'car') {
+            // 小车显示5米安全圈
+            safetyCircle = new google.maps.Circle({
+                strokeColor: '#4CAF50',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: '#4CAF50',
+                fillOpacity: 0.15,
+                map: map,
+                center: myLocation,
+                radius: CONFIG.MAX_DISTANCE_METERS,
+            });
         }
 
-        // ========== 地图相关 ==========
-        function initMap() {
-            map = new google.maps.Map(document.getElementById('map'), {
-                center: myLocation,
-                zoom: 17,
-                mapTypeControl: false,
-                fullscreenControl: false,
-                streetViewControl: false,
-            });
+        showStatus('success', 'GPS location acquired!');
+    }
 
-            // 我的标记
-            myMarker = new google.maps.Marker({
-                position: myLocation,
+    function updateMyMarker() {
+        if (myMarker) {
+            myMarker.setPosition(myLocation);
+            if (safetyCircle) {
+                safetyCircle.setCenter(myLocation);
+            }
+        }
+    }
+
+    function updateOtherMarker() {
+        if (!otherLocation) return;
+
+        if (!otherMarker) {
+            // 创建对方的标记
+            otherMarker = new google.maps.Marker({
+                position: otherLocation,
                 map: map,
-                title: myRole === 'car' ? 'Delivery Car (You)' : 'Customer (You)',
+                title: myRole === 'car' ? 'Customer' : 'Delivery Car',
                 icon: {
                     path: google.maps.SymbolPath.CIRCLE,
                     scale: 12,
-                    fillColor: myRole === 'car' ? '#EA4335' : '#4285F4',
+                    fillColor: myRole === 'car' ? '#4285F4' : '#EA4335',
                     fillOpacity: 1,
                     strokeColor: '#ffffff',
                     strokeWeight: 3,
                 },
             });
-
-            if (myRole === 'car') {
-                // 小车显示5米安全圈
-                safetyCircle = new google.maps.Circle({
-                    strokeColor: '#4CAF50',
-                    strokeOpacity: 0.8,
-                    strokeWeight: 2,
-                    fillColor: '#4CAF50',
-                    fillOpacity: 0.15,
-                    map: map,
-                    center: myLocation,
-                    radius: CONFIG.MAX_DISTANCE_METERS,
-                });
-            }
-
-            showStatus('success', 'GPS location acquired!');
+        } else {
+            otherMarker.setPosition(otherLocation);
         }
 
-        function updateMyMarker() {
-            if (myMarker) {
-                myMarker.setPosition(myLocation);
-                if (safetyCircle) {
-                    safetyCircle.setCenter(myLocation);
-                }
-            }
-        }
+        // 调整地图视图包含两个点
+        const bounds = new google.maps.LatLngBounds();
+        bounds.extend(myLocation);
+        bounds.extend(otherLocation);
+        map.fitBounds(bounds);
+    }
 
-        function updateOtherMarker() {
-            if (!otherLocation) return;
+    // ========== 计算距离 ==========
+    function calculateDistance(point1, point2) {
+        const R = 6371e3;
+        const φ1 = point1.lat * Math.PI / 180;
+        const φ2 = point2.lat * Math.PI / 180;
+        const Δφ = (point2.lat - point1.lat) * Math.PI / 180;
+        const Δλ = (point2.lng - point1.lng) * Math.PI / 180;
 
-            if (!otherMarker) {
-                // 创建对方的标记
-                otherMarker = new google.maps.Marker({
-                    position: otherLocation,
-                    map: map,
-                    title: myRole === 'car' ? 'Customer' : 'Delivery Car',
-                    icon: {
-                        path: google.maps.SymbolPath.CIRCLE,
-                        scale: 12,
-                        fillColor: myRole === 'car' ? '#4285F4' : '#EA4335',
-                        fillOpacity: 1,
-                        strokeColor: '#ffffff',
-                        strokeWeight: 3,
-                    },
-                });
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+        return R * c;
+    }
+
+    function calculateAndDisplayDistance() {
+        if (!myLocation || !otherLocation) return;
+
+        const distance = calculateDistance(myLocation, otherLocation);
+
+        document.getElementById('distanceDisplay').classList.remove('hidden');
+        document.getElementById('distanceValue').textContent = distance.toFixed(1);
+
+        // 顾客端：根据距离显示状态
+        if (myRole === 'customer') {
+            const btn = document.getElementById('unlockButton');
+            if (distance <= CONFIG.MAX_DISTANCE_METERS) {
+                showStatus('success', `You are ${distance.toFixed(1)}m from the car. You can unlock!`);
+                btn.disabled = false;
             } else {
-                otherMarker.setPosition(otherLocation);
+                showStatus('warning', `You are ${distance.toFixed(1)}m from the car. Get closer to unlock.`);
+                btn.disabled = true;
             }
-
-            // 调整地图视图包含两个点
-            const bounds = new google.maps.LatLngBounds();
-            bounds.extend(myLocation);
-            bounds.extend(otherLocation);
-            map.fitBounds(bounds);
-        }
-
-        // ========== 计算距离 ==========
-        function calculateDistance(point1, point2) {
-            const R = 6371e3;
-            const φ1 = point1.lat * Math.PI / 180;
-            const φ2 = point2.lat * Math.PI / 180;
-            const Δφ = (point2.lat - point1.lat) * Math.PI / 180;
-            const Δλ = (point2.lng - point1.lng) * Math.PI / 180;
-
-            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                    Math.cos(φ1) * Math.cos(φ2) *
-                    Math.sin(Δλ/2) * Math.sin(Δλ/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-            return R * c;
-        }
-
-        function calculateAndDisplayDistance() {
-            if (!myLocation || !otherLocation) return;
-
-            const distance = calculateDistance(myLocation, otherLocation);
-            
-            document.getElementById('distanceDisplay').classList.remove('hidden');
-            document.getElementById('distanceValue').textContent = distance.toFixed(1);
-
-            // 顾客端：根据距离显示状态
-            if (myRole === 'customer') {
-                const btn = document.getElementById('unlockButton');
-                if (distance <= CONFIG.MAX_DISTANCE_METERS) {
-                    showStatus('success', `You are ${distance.toFixed(1)}m from the car. You can unlock!`);
-                    btn.disabled = false;
-                } else {
-                    showStatus('warning', `You are ${distance.toFixed(1)}m from the car. Get closer to unlock.`);
-                    btn.disabled = true;
-                }
+        } else {
+            // 小车端：显示顾客距离
+            if (distance <= CONFIG.MAX_DISTANCE_METERS) {
+                showStatus('success', `Customer is nearby (${distance.toFixed(1)}m)`);
             } else {
-                // 小车端：显示顾客距离
-                if (distance <= CONFIG.MAX_DISTANCE_METERS) {
-                    showStatus('success', `Customer is nearby (${distance.toFixed(1)}m)`);
-                } else {
-                    showStatus('info', `Customer is ${distance.toFixed(1)}m away`);
-                }
+                showStatus('info', `Customer is ${distance.toFixed(1)}m away`);
             }
         }
+    }
 
-        // ========== 解锁相关 ==========
-        window.requestUnlock = function() {
-            if (!otherLocation) {
-                alert('Car location not available');
-                return;
-            }
-
-            const distance = calculateDistance(myLocation, otherLocation);
-            if (distance > CONFIG.MAX_DISTANCE_METERS) {
-                alert(`Too far! You are ${distance.toFixed(1)}m from the car.`);
-                return;
-            }
-
-            // 发送解锁请求到Firebase
-            const unlockRef = ref(database, `sessions/${sessionId}/unlockRequest`);
-            set(unlockRef, {
-                timestamp: Date.now(),
-                from: 'customer'
-            });
-
-            showStatus('success', 'Unlock request sent!');
-            
-            setTimeout(() => {
-                showUnlockAnimation();
-            }, 500);
-        };
-
-        function showUnlockAnimation() {
-            const animation = document.getElementById('unlockAnimation');
-            animation.classList.remove('hidden');
-            
-            // 播放声音（可选）
-            // new Audio('unlock.mp3').play();
-            
-            setTimeout(() => {
-                animation.classList.add('hidden');
-            }, 3000);
+    // ========== 解锁相关 ==========
+    window.requestUnlock = function() {
+        if (!otherLocation) {
+            alert('Car location not available');
+            return;
         }
 
-        function showStatus(type, message) {
-            const el = document.getElementById('statusMessage');
-            el.className = `status-card ${type}`;
-            el.textContent = message;
+        const distance = calculateDistance(myLocation, otherLocation);
+        if (distance > CONFIG.MAX_DISTANCE_METERS) {
+            alert(`Too far! You are ${distance.toFixed(1)}m from the car.`);
+            return;
         }
-    </script>
 
-    <!-- Google Maps API -->
-    <script async defer
+        // 发送解锁请求到Firebase
+        const unlockRef = ref(database, `sessions/${sessionId}/unlockRequest`);
+        set(unlockRef, {
+            timestamp: Date.now(),
+            from: 'customer'
+        });
+
+        showStatus('success', 'Unlock request sent!');
+
+        setTimeout(() => {
+            showUnlockAnimation();
+        }, 500);
+    };
+
+    function showUnlockAnimation() {
+        const animation = document.getElementById('unlockAnimation');
+        animation.classList.remove('hidden');
+
+        // 播放声音（可选）
+        // new Audio('unlock.mp3').play();
+
+        setTimeout(() => {
+            animation.classList.add('hidden');
+        }, 3000);
+    }
+
+    function showStatus(type, message) {
+        const el = document.getElementById('statusMessage');
+        el.className = `status-card ${type}`;
+        el.textContent = message;
+    }
+</script>
+
+<!-- Google Maps API -->
+<script async defer
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZs7TmEfW1xglEsTmSSjvJ2Yn4ctoFHJs">
-    </script>
+</script>
 </body>
 </html>
