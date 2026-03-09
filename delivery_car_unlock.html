@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Car - Unlock</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .header {
+            background: #2196F3;
+            color: white;
+            padding: 32px 24px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        #map {
+            width: 100%;
+            height: 350px;
+            background: #e3f2fd;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .info-section {
+            padding: 32px 24px;
+        }
+
+        .status-card {
+            padding: 16px 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+            border-left: 3px solid;
+        }
+
+        .status-card.loading {
+            background: #e3f2fd;
+            border-left-color: #2196F3;
+            color: #1565C0;
+        }
+
+        .status-card.success {
+            background: #e8f5e9;
+            border-left-color: #4CAF50;
+            color: #2E7D32;
+        }
+
+        .status-card.error {
+            background: #ffebee;
+            border-left-color: #f44336;
+            color: #c62828;
+        }
+
+        .status-card.info {
+            background: #e3f2fd;
+            border-left-color: #2196F3;
+            color: #1565C0;
+        }
+
+        .distance-display {
+            text-align: center;
+            padding: 24px;
+            background: white;
+            border: 2px solid #2196F3;
+            border-radius: 4px;
+            margin: 24px 0;
+        }
+
+        .distance-display .label {
+            font-size: 12px;
+            color: #757575;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .distance-display .value {
+            font-size: 48px;
+            font-weight: 300;
+            color: #2196F3;
+            line-height: 1;
+        }
+
+        .distance-display .unit {
+            font-size: 16px;
+            color: #757575;
+            font-weight: 400;
+        }
+
+        .open-button {
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 500;
+            color: white;
+            background: #2196F3;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            letter-spacing: 0.5px;
+        }
+
+        .open-button:hover:not(:disabled) {
+            background: #1976D2;
+        }
+
+        .open-button:active:not(:disabled) {
+            background: #1565C0;
+        }
+
+        .open-button:disabled {
+            background: #BDBDBD;
+            cursor: not-allowed;
+        }
+
+        .details {
+            margin-top: 24px;
+            padding: 0;
+            background: transparent;
+            border-radius: 0;
+            font-size: 13px;
+            color: #616161;
+        }
+
+        .details div {
+            margin: 0;
+            padding: 12px 0;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .details div:last-child {
+            border-bottom: none;
+        }
+
+        .details span:first-child {
+            color: #9E9E9E;
+        }
+
+        .details strong {
+            color: #424242;
+            font-weight: 500;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(33, 150, 243, 0.2);
+            border-top-color: #2196F3;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .footer {
+            padding: 20px 24px;
+            text-align: center;
+            font-size: 12px;
+            color: #9E9E9E;
+            background: #FAFAFA;
+            border-top: 1px solid #f5f5f5;
+        }
+
+        .car-position-control {
+            margin: 24px 0;
+            padding: 20px;
+            background: #f5f7fa;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .car-position-control h3 {
+            font-size: 14px;
+            font-weight: 500;
+            color: #424242;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-group {
+            margin-bottom: 12px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 12px;
+            color: #757575;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .control-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+            transition: border-color 0.2s;
+        }
+
+        .control-group input:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+
+        .update-button {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            color: white;
+            background: #757575;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 12px;
+        }
+
+        .update-button:hover {
+            background: #616161;
+        }
+
+        .update-button:active {
+            background: #424242;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Delivery Car Unlock</h1>
+            <p>Verify your location to unlock</p>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="info-section">
+            <div id="statusMessage" class="status-card loading">
+                <span class="loader"></span> Getting your location...
+            </div>
+
+            <!-- 小车位置调整控件 -->
+            <div class="car-position-control">
+                <h3>Car Position (Test Mode)</h3>
+                <div class="control-group">
+                    <label for="carLatInput">Latitude</label>
+                    <input type="number" id="carLatInput" step="0.000001" value="32.730700">
+                </div>
+                <div class="control-group">
+                    <label for="carLngInput">Longitude</label>
+                    <input type="number" id="carLngInput" step="0.000001" value="-97.114000">
+                </div>
+                <button class="update-button" onclick="updateCarPosition()">Update Car Position</button>
+            </div>
+
+            <div class="distance-display" id="distanceDisplay" style="display: none;">
+                <div class="label">Distance to Car</div>
+                <div>
+                    <span class="value" id="distanceValue">--</span>
+                    <span class="unit">meters</span>
+                </div>
+            </div>
+
+            <button id="openButton" class="open-button" disabled>
+                Verifying location...
+            </button>
+
+            <div class="details">
+                <div>
+                    <span>Order ID:</span>
+                    <strong id="orderIdDisplay">--</strong>
+                </div>
+                <div>
+                    <span>Car ID:</span>
+                    <strong id="carIdDisplay">--</strong>
+                </div>
+                <div>
+                    <span>Your Location:</span>
+                    <strong id="userLocationDisplay">Loading...</strong>
+                </div>
+                <div>
+                    <span>Car Location:</span>
+                    <strong id="carLocationDisplay">--</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Please enable location permission | Safe distance: within 5 meters
+        </div>
+    </div>
+
+    <script>
+        // ========== 配置区 ==========
+        const CONFIG = {
+            GOOGLE_MAPS_API_KEY: 'AIzaSyBZs7TmEfW1xglEsTmSSjvJ2Yn4ctoFHJs', // 你的API Key
+            MAX_DISTANCE_METERS: 5, // 最大允许距离（米）- 改为5米
+            BACKEND_API: 'https://your-backend.com/api', // 你的后端API地址
+        };
+
+        // 从URL获取参数（模拟美团的链接：?token=abc123&orderId=456）
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token') || 'demo-token-123';
+        const orderId = urlParams.get('orderId') || 'ORDER-2024-001';
+
+        // ========== 全局变量 ==========
+        let map;
+        let userMarker;
+        let carMarker;
+        let userLocation = null;
+        let carLocation = null; // 这个应该从后端获取
+
+        // ========== 初始化 ==========
+        function initApp() {
+            document.getElementById('orderIdDisplay').textContent = orderId;
+            
+            // 从输入框读取小车位置
+            updateCarLocationFromInputs();
+            
+            document.getElementById('carIdDisplay').textContent = 'CAR-001';
+            
+            // 获取用户位置
+            getUserLocation();
+        }
+
+        // ========== 从输入框更新小车位置 ==========
+        function updateCarLocationFromInputs() {
+            const lat = parseFloat(document.getElementById('carLatInput').value);
+            const lng = parseFloat(document.getElementById('carLngInput').value);
+            
+            carLocation = { lat, lng };
+            
+            document.getElementById('carLocationDisplay').textContent = 
+                `${carLocation.lat.toFixed(6)}, ${carLocation.lng.toFixed(6)}`;
+        }
+
+        // ========== 更新小车位置（按钮触发）==========
+        function updateCarPosition() {
+            updateCarLocationFromInputs();
+            
+            if (userLocation && map) {
+                // 重新计算距离
+                const distance = calculateDistance(userLocation, carLocation);
+                updateDistanceDisplay(distance);
+                
+                // 更新地图标记
+                if (carMarker) {
+                    carMarker.setPosition(carLocation);
+                }
+                
+                // 更新圆圈
+                if (window.safetyCircle) {
+                    window.safetyCircle.setCenter(carLocation);
+                }
+                
+                // 更新连接线
+                if (window.connectionLine) {
+                    window.connectionLine.setPath([userLocation, carLocation]);
+                }
+                
+                // 重新验证距离
+                const btn = document.getElementById('openButton');
+                if (distance <= CONFIG.MAX_DISTANCE_METERS) {
+                    showStatus('success', 
+                        `Location verified! You are ${distance.toFixed(1)} meters from the car`);
+                    enableOpenButton();
+                } else {
+                    showStatus('error', 
+                        `You are too far (${distance.toFixed(1)} meters). Please get closer.`);
+                    btn.disabled = true;
+                    btn.textContent = 'Too far to unlock';
+                }
+                
+                // 自动调整地图视图
+                const bounds = new google.maps.LatLngBounds();
+                bounds.extend(userLocation);
+                bounds.extend(carLocation);
+                map.fitBounds(bounds);
+            }
+        }
+
+        // ========== 获取用户位置 ==========
+        function getUserLocation() {
+            if (!navigator.geolocation) {
+                showStatus('error', 'Your browser does not support geolocation');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    };
+
+                    document.getElementById('userLocationDisplay').textContent = 
+                        `${userLocation.lat.toFixed(6)}, ${userLocation.lng.toFixed(6)}`;
+
+                    // 初始化地图
+                    initMap();
+
+                    // 计算距离
+                    const distance = calculateDistance(userLocation, carLocation);
+                    updateDistanceDisplay(distance);
+
+                    // 验证距离
+                    if (distance <= CONFIG.MAX_DISTANCE_METERS) {
+                        showStatus('success', 
+                            `Location verified! You are ${distance.toFixed(1)} meters from the car`);
+                        enableOpenButton();
+                    } else {
+                        showStatus('error', 
+                            `You are too far (${distance.toFixed(1)} meters). Please get closer.`);
+                    }
+                },
+                (error) => {
+                    let errorMsg = '';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMsg = 'Location permission denied. Please enable it in browser settings.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMsg = 'Location information unavailable.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMsg = 'Location request timed out. Please try again.';
+                            break;
+                        default:
+                            errorMsg = 'An unknown error occurred while getting location.';
+                    }
+                    showStatus('error', errorMsg);
+                },
+                {
+                    enableHighAccuracy: true, // 高精度模式
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        // ========== 初始化谷歌地图 ==========
+        function initMap() {
+            // 计算中心点
+            const centerLat = (userLocation.lat + carLocation.lat) / 2;
+            const centerLng = (userLocation.lng + carLocation.lng) / 2;
+
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: centerLat, lng: centerLng },
+                zoom: 16,
+                mapTypeControl: false,
+                fullscreenControl: false,
+                streetViewControl: false,
+            });
+
+            // 添加用户标记（蓝色）
+            userMarker = new google.maps.Marker({
+                position: userLocation,
+                map: map,
+                title: 'Your Location',
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 10,
+                    fillColor: '#4285F4',
+                    fillOpacity: 1,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 2,
+                },
+            });
+
+            // 添加小车标记（红色）
+            carMarker = new google.maps.Marker({
+                position: carLocation,
+                map: map,
+                title: 'Delivery Car',
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 12,
+                    fillColor: '#EA4335',
+                    fillOpacity: 1,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 2,
+                },
+            });
+
+            // 添加5米半径圆圈（安全范围）- 保存引用
+            window.safetyCircle = new google.maps.Circle({
+                strokeColor: '#28a745',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: '#28a745',
+                fillOpacity: 0.15,
+                map: map,
+                center: carLocation,
+                radius: CONFIG.MAX_DISTANCE_METERS,
+            });
+
+            // 连接线 - 保存引用
+            window.connectionLine = new google.maps.Polyline({
+                path: [userLocation, carLocation],
+                geodesic: true,
+                strokeColor: '#2196F3',
+                strokeOpacity: 0.6,
+                strokeWeight: 2,
+                map: map,
+            });
+
+            // 自动调整视图
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend(userLocation);
+            bounds.extend(carLocation);
+            map.fitBounds(bounds);
+        }
+
+        // ========== 计算两点距离（Haversine公式）==========
+        function calculateDistance(point1, point2) {
+            const R = 6371e3; // 地球半径（米）
+            const φ1 = point1.lat * Math.PI / 180;
+            const φ2 = point2.lat * Math.PI / 180;
+            const Δφ = (point2.lat - point1.lat) * Math.PI / 180;
+            const Δλ = (point2.lng - point1.lng) * Math.PI / 180;
+
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                    Math.cos(φ1) * Math.cos(φ2) *
+                    Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+            return R * c; // 返回米
+        }
+
+        // ========== 更新距离显示 ==========
+        function updateDistanceDisplay(distance) {
+            document.getElementById('distanceDisplay').style.display = 'block';
+            document.getElementById('distanceValue').textContent = distance.toFixed(1);
+        }
+
+        // ========== 显示状态消息 ==========
+        function showStatus(type, message) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.className = `status-card ${type}`;
+            statusEl.innerHTML = message;
+        }
+
+        // ========== 启用开门按钮 ==========
+        function enableOpenButton() {
+            const btn = document.getElementById('openButton');
+            btn.disabled = false;
+            btn.textContent = 'Unlock Door';
+            btn.onclick = handleOpenDoor;
+        }
+
+        // ========== 处理开门请求 ==========
+        async function handleOpenDoor() {
+            const btn = document.getElementById('openButton');
+            btn.disabled = true;
+            btn.textContent = 'Unlocking...';
+
+            try {
+                // 实际项目中应该调用后端API
+                const response = await fetch(`${CONFIG.BACKEND_API}/open-door`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        token: token,
+                        orderId: orderId,
+                        userLocation: userLocation,
+                        timestamp: Date.now()
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to unlock');
+
+                const data = await response.json();
+                
+                showStatus('success', 'Door unlocked! Please pick up your order.');
+                btn.textContent = 'Unlocked';
+                
+            } catch (error) {
+                // Demo模式：直接模拟成功
+                console.log('Demo mode: Simulating unlock success');
+                showStatus('success', 'Door unlocked! (Demo Mode)');
+                btn.textContent = 'Unlocked';
+                
+                // 实际项目中应该显示错误
+                // showStatus('error', 'Failed to unlock: ' + error.message);
+                // btn.disabled = false;
+                // btn.textContent = 'Retry';
+            }
+        }
+
+        // ========== 页面加载完成后初始化 ==========
+        window.onload = initApp;
+    </script>
+
+    <!-- 加载Google Maps API -->
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZs7TmEfW1xglEsTmSSjvJ2Yn4ctoFHJs&callback=initMap&libraries=geometry">
+    </script>
+</body>
+</html>
