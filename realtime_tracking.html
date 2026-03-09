@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Car - Real-time Tracking</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .header {
+            background: #2196F3;
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* 角色选择界面 */
+        .role-selection {
+            padding: 40px 24px;
+            text-align: center;
+        }
+
+        .role-selection h2 {
+            font-size: 20px;
+            color: #424242;
+            margin-bottom: 24px;
+        }
+
+        .role-buttons {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .role-button {
+            flex: 1;
+            padding: 32px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .role-button:hover {
+            border-color: #2196F3;
+            background: #e3f2fd;
+        }
+
+        .role-button .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .role-button .title {
+            font-size: 18px;
+            font-weight: 500;
+            color: #424242;
+        }
+
+        .role-button .desc {
+            font-size: 12px;
+            color: #757575;
+            margin-top: 8px;
+        }
+
+        .session-input {
+            margin-top: 24px;
+        }
+
+        .session-input label {
+            display: block;
+            font-size: 14px;
+            color: #757575;
+            margin-bottom: 8px;
+        }
+
+        .session-input input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .session-input input:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+
+        /* 主界面 */
+        .hidden {
+            display: none !important;
+        }
+
+        #map {
+            width: 100%;
+            height: 350px;
+            background: #e3f2fd;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .info-section {
+            padding: 24px;
+        }
+
+        .status-card {
+            padding: 16px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            border-left: 3px solid;
+        }
+
+        .status-card.success {
+            background: #e8f5e9;
+            border-left-color: #4CAF50;
+            color: #2E7D32;
+        }
+
+        .status-card.warning {
+            background: #fff3e0;
+            border-left-color: #FF9800;
+            color: #E65100;
+        }
+
+        .status-card.info {
+            background: #e3f2fd;
+            border-left-color: #2196F3;
+            color: #1565C0;
+        }
+
+        .distance-display {
+            text-align: center;
+            padding: 24px;
+            background: white;
+            border: 2px solid #2196F3;
+            border-radius: 4px;
+            margin: 16px 0;
+        }
+
+        .distance-display .label {
+            font-size: 12px;
+            color: #757575;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .distance-display .value {
+            font-size: 48px;
+            font-weight: 300;
+            color: #2196F3;
+        }
+
+        .distance-display .unit {
+            font-size: 16px;
+            color: #757575;
+        }
+
+        .unlock-button {
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 500;
+            color: white;
+            background: #2196F3;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .unlock-button:hover:not(:disabled) {
+            background: #1976D2;
+        }
+
+        .unlock-button:disabled {
+            background: #BDBDBD;
+            cursor: not-allowed;
+        }
+
+        /* 解锁动画 */
+        .unlock-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .unlock-animation .icon {
+            font-size: 120px;
+            margin-bottom: 24px;
+            animation: scaleUp 0.5s ease-out;
+        }
+
+        @keyframes scaleUp {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+
+        .unlock-animation .message {
+            font-size: 24px;
+            color: white;
+            font-weight: 500;
+        }
+
+        .details {
+            margin-top: 16px;
+            padding: 0;
+            font-size: 13px;
+            color: #616161;
+        }
+
+        .details div {
+            padding: 12px 0;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .details div:last-child {
+            border-bottom: none;
+        }
+
+        .details strong {
+            color: #424242;
+        }
+
+        .footer {
+            padding: 16px 24px;
+            text-align: center;
+            font-size: 12px;
+            color: #9E9E9E;
+            background: #FAFAFA;
+            border-top: 1px solid #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 Real-time Delivery Tracker</h1>
+            <p>Live GPS tracking & unlock system</p>
+        </div>
+
+        <!-- 角色选择界面 -->
+        <div id="roleSelection" class="role-selection">
+            <h2>Choose Your Role</h2>
+            
+            <div class="role-buttons">
+                <div class="role-button" onclick="selectRole('car')">
+                    <div class="icon">🚗</div>
+                    <div class="title">Delivery Car</div>
+                    <div class="desc">Share your location & receive unlock requests</div>
+                </div>
+                
+                <div class="role-button" onclick="selectRole('customer')">
+                    <div class="icon">👤</div>
+                    <div class="title">Customer</div>
+                    <div class="desc">Track car & unlock when nearby</div>
+                </div>
+            </div>
+
+            <div class="session-input">
+                <label>Session ID (same ID for both devices):</label>
+                <input type="text" id="sessionId" placeholder="Enter session ID, e.g., demo123" value="demo123">
+            </div>
+        </div>
+
+        <!-- 主界面 -->
+        <div id="mainInterface" class="hidden">
+            <div id="map"></div>
+
+            <div class="info-section">
+                <div id="statusMessage" class="status-card info">
+                    Waiting for GPS location...
+                </div>
+
+                <div id="distanceDisplay" class="distance-display hidden">
+                    <div class="label">Distance</div>
+                    <div>
+                        <span class="value" id="distanceValue">--</span>
+                        <span class="unit">m</span>
+                    </div>
+                </div>
+
+                <button id="unlockButton" class="unlock-button hidden" onclick="requestUnlock()">
+                    Unlock Door
+                </button>
+
+                <div class="details">
+                    <div>
+                        <span>Role:</span>
+                        <strong id="roleDisplay">--</strong>
+                    </div>
+                    <div>
+                        <span>Session ID:</span>
+                        <strong id="sessionDisplay">--</strong>
+                    </div>
+                    <div>
+                        <span>Your Location:</span>
+                        <strong id="myLocationDisplay">Loading...</strong>
+                    </div>
+                    <div id="otherLocationRow" class="hidden">
+                        <span id="otherLabel">Other Location:</span>
+                        <strong id="otherLocationDisplay">Waiting...</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer">
+                Session: <span id="sessionFooter">--</span> | 
+                <a href="#" onclick="resetSession()">Change Role</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 解锁动画 -->
+    <div id="unlockAnimation" class="unlock-animation hidden">
+        <div class="icon">🔓</div>
+        <div class="message">Door Unlocked!</div>
+    </div>
+
+    <script type="module">
+        // ========== Firebase配置（需要替换成你的）==========
+        // 暂时用localStorage模拟，后面会改成真正的Firebase
+        
+        // ========== 配置 ==========
+        const CONFIG = {
+            GOOGLE_MAPS_API_KEY: 'AIzaSyBZs7TmEfW1xglEsTmSSjvJ2Yn4ctoFHJs',
+            MAX_DISTANCE_METERS: 5,
+            UPDATE_INTERVAL: 2000, // 每2秒更新一次位置
+        };
+
+        // ========== 全局变量 ==========
+        let myRole = null; // 'car' 或 'customer'
+        let sessionId = null;
+        let myLocation = null;
+        let otherLocation = null;
+        let map = null;
+        let myMarker = null;
+        let otherMarker = null;
+        let watchId = null;
+
+        // ========== 简单的后端模拟（使用localStorage + 轮询）==========
+        // 注意：这只能在同一浏览器的不同标签页测试
+        // 真实环境需要用Firebase或WebSocket
+        
+        class SimpleBackend {
+            constructor(sessionId) {
+                this.sessionId = sessionId;
+                this.key = `delivery_session_${sessionId}`;
+            }
+
+            updateMyLocation(role, location) {
+                const data = this.getData();
+                data[role] = {
+                    location: location,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem(this.key, JSON.stringify(data));
+            }
+
+            getOtherLocation(myRole) {
+                const data = this.getData();
+                const otherRole = myRole === 'car' ? 'customer' : 'car';
+                return data[otherRole]?.location || null;
+            }
+
+            requestUnlock() {
+                const data = this.getData();
+                data.unlockRequest = {
+                    timestamp: Date.now(),
+                    from: 'customer'
+                };
+                localStorage.setItem(this.key, JSON.stringify(data));
+            }
+
+            checkUnlockRequest() {
+                const data = this.getData();
+                if (data.unlockRequest && data.unlockRequest.timestamp > (Date.now() - 5000)) {
+                    // 清除请求
+                    delete data.unlockRequest;
+                    localStorage.setItem(this.key, JSON.stringify(data));
+                    return true;
+                }
+                return false;
+            }
+
+            getData() {
+                const data = localStorage.getItem(this.key);
+                return data ? JSON.parse(data) : {};
+            }
+
+            clear() {
+                localStorage.removeItem(this.key);
+            }
+        }
+
+        let backend = null;
+
+        // ========== 角色选择 ==========
+        window.selectRole = function(role) {
+            myRole = role;
+            sessionId = document.getElementById('sessionId').value.trim();
+            
+            if (!sessionId) {
+                alert('Please enter a session ID');
+                return;
+            }
+
+            backend = new SimpleBackend(sessionId);
+            
+            document.getElementById('roleSelection').classList.add('hidden');
+            document.getElementById('mainInterface').classList.remove('hidden');
+            
+            document.getElementById('roleDisplay').textContent = 
+                role === 'car' ? '🚗 Delivery Car' : '👤 Customer';
+            document.getElementById('sessionDisplay').textContent = sessionId;
+            document.getElementById('sessionFooter').textContent = sessionId;
+            
+            if (role === 'customer') {
+                document.getElementById('otherLabel').textContent = 'Car Location:';
+                document.getElementById('unlockButton').classList.remove('hidden');
+            } else {
+                document.getElementById('otherLabel').textContent = 'Customer Location:';
+            }
+            
+            document.getElementById('otherLocationRow').classList.remove('hidden');
+            
+            startTracking();
+        };
+
+        window.resetSession = function() {
+            if (confirm('Reset session and choose new role?')) {
+                stopTracking();
+                if (backend) backend.clear();
+                
+                document.getElementById('mainInterface').classList.add('hidden');
+                document.getElementById('roleSelection').classList.remove('hidden');
+                
+                myRole = null;
+                sessionId = null;
+                myLocation = null;
+                otherLocation = null;
+            }
+            return false;
+        };
+
+        // ========== 开始追踪 ==========
+        function startTracking() {
+            if (!navigator.geolocation) {
+                showStatus('error', 'Browser does not support geolocation');
+                return;
+            }
+
+            // 持续监听位置变化
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    myLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    };
+
+                    document.getElementById('myLocationDisplay').textContent = 
+                        `${myLocation.lat.toFixed(6)}, ${myLocation.lng.toFixed(6)}`;
+
+                    // 上传我的位置到后端
+                    backend.updateMyLocation(myRole, myLocation);
+
+                    // 初始化或更新地图
+                    if (!map) {
+                        initMap();
+                    } else {
+                        updateMyMarker();
+                    }
+
+                    // 检查解锁请求（仅小车端）
+                    if (myRole === 'car' && backend.checkUnlockRequest()) {
+                        showUnlockAnimation();
+                    }
+                },
+                (error) => {
+                    showStatus('error', 'Failed to get location: ' + error.message);
+                },
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 10000
+                }
+            );
+
+            // 定期获取对方位置
+            setInterval(updateOtherLocation, CONFIG.UPDATE_INTERVAL);
+        }
+
+        function stopTracking() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+            }
+        }
+
+        // ========== 更新对方位置 ==========
+        function updateOtherLocation() {
+            if (!backend || !myRole) return;
+
+            const newOtherLocation = backend.getOtherLocation(myRole);
+            
+            if (newOtherLocation) {
+                otherLocation = newOtherLocation;
+                
+                document.getElementById('otherLocationDisplay').textContent = 
+                    `${otherLocation.lat.toFixed(6)}, ${otherLocation.lng.toFixed(6)}`;
+
+                if (map) {
+                    updateOtherMarker();
+                    calculateAndDisplayDistance();
+                }
+            }
+        }
+
+        // ========== 地图相关 ==========
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: myLocation,
+                zoom: 16,
+                mapTypeControl: false,
+                fullscreenControl: false,
+                streetViewControl: false,
+            });
+
+            // 我的标记
+            myMarker = new google.maps.Marker({
+                position: myLocation,
+                map: map,
+                title: myRole === 'car' ? 'Delivery Car' : 'Customer',
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 12,
+                    fillColor: myRole === 'car' ? '#EA4335' : '#4285F4',
+                    fillOpacity: 1,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 2,
+                },
+            });
+
+            if (myRole === 'car') {
+                // 小车显示5米安全圈
+                new google.maps.Circle({
+                    strokeColor: '#28a745',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    fillColor: '#28a745',
+                    fillOpacity: 0.15,
+                    map: map,
+                    center: myLocation,
+                    radius: CONFIG.MAX_DISTANCE_METERS,
+                });
+            }
+        }
+
+        function updateMyMarker() {
+            if (myMarker) {
+                myMarker.setPosition(myLocation);
+            }
+        }
+
+        function updateOtherMarker() {
+            if (!otherLocation) return;
+
+            if (!otherMarker) {
+                // 创建对方的标记
+                otherMarker = new google.maps.Marker({
+                    position: otherLocation,
+                    map: map,
+                    title: myRole === 'car' ? 'Customer' : 'Delivery Car',
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 12,
+                        fillColor: myRole === 'car' ? '#4285F4' : '#EA4335',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 2,
+                    },
+                });
+            } else {
+                otherMarker.setPosition(otherLocation);
+            }
+
+            // 调整地图视图包含两个点
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend(myLocation);
+            bounds.extend(otherLocation);
+            map.fitBounds(bounds);
+        }
+
+        // ========== 计算距离 ==========
+        function calculateDistance(point1, point2) {
+            const R = 6371e3;
+            const φ1 = point1.lat * Math.PI / 180;
+            const φ2 = point2.lat * Math.PI / 180;
+            const Δφ = (point2.lat - point1.lat) * Math.PI / 180;
+            const Δλ = (point2.lng - point1.lng) * Math.PI / 180;
+
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                    Math.cos(φ1) * Math.cos(φ2) *
+                    Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+            return R * c;
+        }
+
+        function calculateAndDisplayDistance() {
+            if (!myLocation || !otherLocation) return;
+
+            const distance = calculateDistance(myLocation, otherLocation);
+            
+            document.getElementById('distanceDisplay').classList.remove('hidden');
+            document.getElementById('distanceValue').textContent = distance.toFixed(1);
+
+            // 顾客端：根据距离显示状态
+            if (myRole === 'customer') {
+                const btn = document.getElementById('unlockButton');
+                if (distance <= CONFIG.MAX_DISTANCE_METERS) {
+                    showStatus('success', `You are ${distance.toFixed(1)}m from the car. You can unlock!`);
+                    btn.disabled = false;
+                } else {
+                    showStatus('warning', `You are ${distance.toFixed(1)}m from the car. Get closer to unlock.`);
+                    btn.disabled = true;
+                }
+            } else {
+                // 小车端：显示顾客距离
+                if (distance <= CONFIG.MAX_DISTANCE_METERS) {
+                    showStatus('success', `Customer is nearby (${distance.toFixed(1)}m)`);
+                } else {
+                    showStatus('info', `Customer is ${distance.toFixed(1)}m away`);
+                }
+            }
+        }
+
+        // ========== 解锁相关 ==========
+        window.requestUnlock = function() {
+            if (!otherLocation) {
+                alert('Car location not available');
+                return;
+            }
+
+            const distance = calculateDistance(myLocation, otherLocation);
+            if (distance > CONFIG.MAX_DISTANCE_METERS) {
+                alert(`Too far! You are ${distance.toFixed(1)}m from the car.`);
+                return;
+            }
+
+            // 发送解锁请求
+            backend.requestUnlock();
+            showStatus('success', 'Unlock request sent!');
+            
+            setTimeout(() => {
+                showUnlockAnimation();
+            }, 500);
+        };
+
+        function showUnlockAnimation() {
+            const animation = document.getElementById('unlockAnimation');
+            animation.classList.remove('hidden');
+            
+            setTimeout(() => {
+                animation.classList.add('hidden');
+            }, 3000);
+        }
+
+        function showStatus(type, message) {
+            const el = document.getElementById('statusMessage');
+            el.className = `status-card ${type}`;
+            el.textContent = message;
+        }
+
+        // ========== 初始化 ==========
+        window.onload = function() {
+            console.log('App loaded');
+        };
+    </script>
+
+    <!-- Google Maps API -->
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZs7TmEfW1xglEsTmSSjvJ2Yn4ctoFHJs">
+    </script>
+</body>
+</html>
